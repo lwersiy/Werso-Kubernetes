@@ -1,0 +1,149 @@
+Demo – 1 :  EKS  Node Group
+
+Prerequisites:
+
+    AWS Account with Admin Privileges
+    AWS CLI Access to use Kubectl utility
+    EC2 Instance ( To manage cluster by using Kubectl)
+        Choose Amazon Linux 2
+        Launch in public subnet
+        Security group open to world ==> not recommended in real world
+        Once the EC2 instance got created. Login and configure aws creds
+        Run below command
+        aws configure
+        Fill secret key and access key of your user
+    Now login with the same user into aws console and follow below procedure
+
+Step by step procedure:
+
+Step – 1 : Create IAM role for EKS Cluster
+Step – 2 : Create dedicated VPC for the EKS Cluster
+Step – 3 : Create EKS Cluster
+Step – 4 : Install & Setup IAM Authenticator, Kubectl utility and Updated AWS CLI
+Step – 5 : Create IAM Role for EKS Worker Nodes
+Step – 6 : Create Worker Nodes
+Step – 7 : Deploying Demo Application
+
+
+==> Step – 1 : Create IAM role for EKS Cluster
+
+Login AWS console
+Navigate to IAM Console
+
+
+==> Step – 2 : Create dedicated VPC for the EKS Cluster
+
+using the amazon-eks-vpc.yaml file in the . directory, create vpc in cloudformation.
+
+==> Step – 3 : Create EKS Cluster 
+
+from Elastic Kubernetes Service, 
+create cluster in the dedicated vpc.
+This may take a while to create.
+
+
+==> Step – 4 : Install & Setup IAM Authenticator and Kubectl utility
+
+We have to install Kubectl and IAM Authenticator on a EC2 Instance as a part of prerequisite
+Please login to EC2 instance which we created as a part of prerequisite and run a sample aws command to check access
+aws s3 ls
+make sure command works
+
+
+Navigate to below link
+https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html
+Follow all the commands and install IAM-Authenticator
+
+"curl -Lo aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.6.11/aws-iam-authenticator_0.6.11_linux_amd64"
+
+run ls to list the downloaded file
+give the file executable permission using command below
+"chmod +x ./aws-iam-authenticator"
+
+
+Copy the binary to a folder in your $PATH. We recommend creating a $HOME/bin/aws-iam-authenticator and ensuring that $HOME/bin comes first in your $PATH
+"mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$HOME/bin:$PATH"
+
+Add $HOME/bin to your PATH environment variable.
+"echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc"
+
+Test that the aws-iam-authenticator binary works.
+"aws-iam-authenticator help"
+
+
+Next we need to install Kubectl
+Navigate to below link
+https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
+Follow all the commands and install kubectl
+
+Download the kubectl binary for your cluster's Kubernetes version from Amazon S3.
+"curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.17/2023-11-02/bin/linux/amd64/kubectl"
+ensure you use the same k8s version as in the cluster. also use the amd engine as in the authenticator.
+
+
+Apply execute permissions to the binary.
+"chmod +x ./kubectl"
+
+Copy the binary to a folder in your PATH. If you have already installed a version of kubectl, then we recommend creating a $HOME/bin/kubectl and ensuring that $HOME/bin comes first in your $PATH.
+"mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$HOME/bin:$PATH"
+
+(Optional) Add the $HOME/bin path to your shell initialization file so that it is configured when you open a shell.
+"echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc"
+
+Kubectl installed successfully
+Upgrade the AWS CLI
+"curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" "
+"unzip awscliv2.zip"
+"sudo ./aws/install --update"
+
+We have to run below command to add EKS cluster to kubeconfig to download the .pem key for the kube cluster
+"aws eks --region us-east-1 update-kubeconfig --name EKS-Cluster-configure"
+NOTE THE NAME OF THE CLUSTER YOU CREATED MUST NE ACCURATE
+
+to show that we can connect to our cluster run command 
+"kubectl get svc"
+"kubectl get nodes"
+"kubectl get ns"  name spaces
+
+
+==> Step – 5 : Create IAM Role for EKS Worker Nodes
+
+Policies belowe
+AmazonEC2ContainerRegistryReadOnly
+AmazonEKS_CNI_Policy
+AmazonEKSWorkerNodePolicy
+
+
+==> Step – 6 : Create Worker Nodes
+Navigate to EKS Console
+Then to compute finally add node group
+    add node group
+    configure node group
+    set conpute and scaling configuration
+    specify networking
+    review and create
+Once the status is active 
+Open EC2 instance which is created as a part of prerequisite
+Run below command
+"kubectl get nodes"
+
+below is a link of kublet commands && cheat sheet
+https://phoenixnap.com/kb/wp-content/uploads/2021/11/kubectl-commands-cheat-sheet-by-pnap.pdf
+https://phoenixnap.com/kb/kubectl-commands-cheat-sheet
+
+
+==> Step – 7 : Deploying Demo Application
+
+Run below command on EC2
+    sudo yum install git -y
+    mkdir demo
+    cd demo
+Clone the code to EC2
+    git clone https://github.com/lwersiy/Werso-aws-Avinash.git
+    cd Werso-aws-Avinash/kubernetes/knote-example
+Deploy app by running below commands
+    kubectl apply -f mongo.yaml
+    kubectl apply -f knote.yaml
+Check the services running
+    kubectl get svc
+    kubectl get pods
