@@ -1,4 +1,4 @@
-Demo – 1 :  EKS  Node Group
+Demo – 1 :  EKS - Node Group
 
 Prerequisites:
 
@@ -56,7 +56,7 @@ Follow all the commands and install IAM-Authenticator
 
 "curl -Lo aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.6.11/aws-iam-authenticator_0.6.11_linux_amd64"
 
-run ls to list the downloaded file
+run ls to list the downloaded binary from github
 give the file executable permission using command below
 "chmod +x ./aws-iam-authenticator"
 
@@ -75,6 +75,9 @@ Next we need to install Kubectl
 Navigate to below link
 https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html
 Follow all the commands and install kubectl
+
+Determine whether you already have kubectl installed on your device by running command
+"kubectl version --client"
 
 Download the kubectl binary for your cluster's Kubernetes version from Amazon S3.
 "curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.17/2023-11-02/bin/linux/amd64/kubectl"
@@ -147,3 +150,42 @@ Deploy app by running below commands
 Check the services running
     kubectl get svc
     kubectl get pods
+
+Test your application by running the loadbalancer arn on the browser
+
+############################################################################################
+############################################################################################
+
+Demo - 2:   EKS - Fargate
+
+Step-1: Install kubectl and iam-authenticator
+follow instructions above to install kubectl and iam authenticator.
+
+
+Step-2: install eksctl tool on your device
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+
+sudo mv /tmp/eksctl /usr/local/bin
+
+# Test the installation
+eksctl version
+
+
+Configure aws with credential
+"aws configure"
+
+Create cluster using command as below
+"eksctl create cluster --name my-cluster --region us-east-1 --fargate"
+
+
+Deleting
+# Step 1: Delete Fargate profiles
+eksctl delete fargateprofile --name my-cluster --region us-east-1 --profile fp-default
+# Replace "fp-default" with the actual Fargate profile name if you have named profiles.
+
+# Step 2: Delete the EKS cluster
+eksctl delete cluster --name my-cluster --region us-east-1
+
+
+Step 3: Deployment
